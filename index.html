@@ -1,0 +1,62 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小廚神 AI 提問料理屋｜多人連線</title><style>
+:root{--cream:#fff4d9;--paper:#fffaf0;--ink:#493328;--red:#a63d30;--green:#55745c;--gold:#e9ac4c;--line:#e8d4b1}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 10%,#ffe2ae,transparent 35%),repeating-linear-gradient(90deg,#f3e2c7 0 34px,#f6e8d0 34px 68px);font-family:system-ui,-apple-system,'Noto Sans TC',sans-serif;color:var(--ink)}header{background:#683e32;color:#fff4dc;padding:22px 16px;text-align:center;border-bottom:8px solid #c18a56}h1{margin:0;font-size:clamp(25px,4vw,42px)}header p{margin:8px 0 0}main{max-width:1180px;margin:22px auto;padding:0 14px}.panel{background:var(--paper);border:3px solid var(--line);border-radius:20px;box-shadow:0 7px 0 #d7bb93;padding:20px;margin-bottom:18px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}input,textarea,button{font:inherit;border-radius:10px;padding:11px}input,textarea{border:2px solid #d5b78d;background:#fff;width:100%;color:var(--ink)}button{border:0;background:var(--red);color:white;cursor:pointer;font-weight:750;box-shadow:0 3px 0 #722c25}button:hover{filter:brightness(1.06)}button:disabled{opacity:.45;cursor:not-allowed}button.alt{background:var(--green);box-shadow:0 3px 0 #385440}button.gold{background:#9b6a25}button.light{background:#ead9b8;color:#513b2c;box-shadow:0 3px 0 #c7ae86}label{font-weight:750;display:block;margin:8px 0}.small{font-size:13px;color:#806954}.muted{color:#8c6d5a}.card{border:2px solid #d7b98c;border-radius:14px;padding:12px;background:#fffaf0;min-height:110px}.card.task{border-top:7px solid #ba5a3b}.card.detail{border-top:7px solid #60866a}.card.format{border-top:7px solid #d2a143}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.tag{font-size:12px;font-weight:800;letter-spacing:1px;color:#856447}.card strong{display:block;margin:9px 0;line-height:1.5}.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:12px}.player{border:2px solid #e0c8a4;border-radius:15px;padding:14px;background:#fffdf7}.player.me{border-color:var(--green);background:#f5fbf0}.player h3{margin:0 0 10px}.pill{display:inline-block;background:#eed7b4;border-radius:20px;padding:4px 9px;font-size:12px}.prompt{background:#fff;border:2px dashed #c89c69;border-radius:12px;padding:12px;white-space:pre-wrap;min-height:65px;line-height:1.7;overflow-wrap:anywhere}#app{display:none}#status{font-weight:700}#configBox{display:none}.steps{line-height:1.85}a{color:#8b3f31}footer{text-align:center;padding:18px;font-size:13px;color:#765d49}@media(max-width:680px){.split,.cards{grid-template-columns:1fr}.panel{padding:14px}}
+</style></head><body><header><h1>🍲 小廚神 AI 提問料理屋 🧑‍🍳</h1><p>三道食材：任務 × 細節 × 格式　｜　巴黎小餐館的 AI 料理挑戰</p></header><main>
+<section class="panel" id="setup"><h2>🚪 進入料理教室</h2><p class="small">老師建立房間後，把房間代碼告訴同學；每位同學使用相同網址即可加入。</p><div class="split"><div><label>你的廚師暱稱</label><input id="nickname" maxlength="14" placeholder="例如：小廚師阿樂"><label>房間代碼（加入時填寫）</label><input id="roomInput" maxlength="6" placeholder="6 位數字" inputmode="numeric"><div class="row" style="margin-top:14px"><button id="createBtn">👩‍🏫 建立房間</button><button id="joinBtn" class="alt">🍴 加入房間</button></div></div><div><h3>📋 今日料理規則</h3><p class="steps">① 每個人自己抽三張卡<br>② 大家即時看到彼此的卡牌<br>③ 調整提示詞，送去 E度測試<br>④ 記錄測試發現，互相給回饋</p></div></div><p id="setupStatus" class="small"></p></section>
+<section id="app"><div class="panel"><div class="row" style="justify-content:space-between"><div><h2 style="margin:0">🍽️ 房間 <span id="roomLabel"></span> <span class="pill" id="roleLabel"></span></h2><p id="status" class="small">連線中…</p></div><div class="row"><button class="light" id="copyRoom">複製房間代碼</button><button class="light" id="leaveBtn">離開</button></div></div><div class="row" id="hostActions" style="margin-top:12px;display:none"><button id="newRound" class="gold">🔔 全班開始下一回合</button><span class="small">只有建立房間的老師能操作</span></div><p>目前回合：<strong id="roundLabel">1</strong>　｜　在線廚師：<strong id="countLabel">0</strong></p></div>
+<div class="panel"><h2>🧺 我的食材卡牌</h2><div class="cards" id="myCards"></div><div class="row" style="margin-top:15px"><button id="drawAll">🎲 抽三張卡</button><button id="drawTask" class="light">換任務</button><button id="drawDetail" class="light">換細節</button><button id="drawFormat" class="light">換格式</button></div><label for="promptEdit">✍️ 我的提示詞（可以自由修改）</label><textarea id="promptEdit" rows="4" placeholder="抽卡後會自動組合提示詞，也可以自己修改"></textarea><div class="row" style="margin-top:10px"><button id="copyPrompt" class="alt">📋 複製提示詞，貼到 E度</button><a href="https://adl.edu.tw/" target="_blank" rel="noopener">前往因材網 ↗</a></div><label for="resultEdit">🔬 E度測試結果／我發現了什麼？</label><textarea id="resultEdit" rows="3" placeholder="例如：AI 寫得太長，我加上字數限制後變清楚了！"></textarea><p class="small">你的卡牌與文字會即時顯示在其他同學的畫面上。不要輸入真實姓名、電話或私人資訊。</p></div>
+<div class="panel"><h2>👀 全班料理展示牆 <span class="pill">即時更新</span></h2><div class="players" id="players"></div></div></section>
+</main><footer>原創巴黎料理教室風格・適合 Teams 線上小班使用｜本遊戲不隸屬於任何電影作品</footer>
+<script>
+window.addEventListener('error',e=>{const x=document.getElementById('setupStatus');if(x)x.textContent='⚠️ 網頁程式錯誤：'+(e.message||'未知錯誤')});
+window.addEventListener('unhandledrejection',e=>{const x=document.getElementById('setupStatus');if(x)x.textContent='⚠️ 連線錯誤：'+(e.reason?.message||String(e.reason))});
+</script>
+<script type="module">
+let initializeApp,getDatabase,ref,set,update,onValue,get,onDisconnect,remove,runTransaction,getAuth,signInAnonymously;
+let sdkPromise;
+async function loadFirebase(){
+ if(sdkPromise)return sdkPromise;
+ sdkPromise=(async()=>{
+  const [app,database,authentication]=await Promise.all([
+   import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'),
+   import('https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js'),
+   import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js')]);
+  ({initializeApp}=app);
+  ({getDatabase,ref,set,update,onValue,get,onDisconnect,remove,runTransaction}=database);
+  ({getAuth,signInAnonymously}=authentication);
+ })();return sdkPromise;
+}
+const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sets=[['寫一個冒險故事','介紹一種神奇動物','設計一份創意菜單','解釋為什麼要合作','想出一個校園小遊戲','寫一封邀請信','設計一位故事角色','介紹如何保護地球','寫一篇趣味新聞','幫我想出一個童話結局','設計一個神奇發明','教我一道簡單料理'],['主角是一隻膽小的小老鼠','發生在熱鬧的巴黎餐館','適合國小三年級閱讀','要有互相幫助的精神','故事裡有一隻會唱歌的番茄','不能使用太難的詞語','主角是一位迷路的機器人','要有意想不到的反轉','背景是海底的甜點店','內容要安全又有趣','加入一位愛吃起司的廚師','讓兩個性格相反的角色合作'],['分成四個段落','用五句話回答','用表格呈現','寫成三幕小短劇','用條列式列出三點','寫成四格漫畫分鏡','用問答對話呈現','用一首短詩呈現','加上標題與結尾','每段不超過50字','用三個步驟說明','列出角色、場景和事件']];
+const firebaseConfig = {
+  apiKey: "AIzaSyCMOVjOh04c4hkuRXJWUsnWdE2ZWRIAVdI",
+  authDomain: "ai-prompt-kitchen-b4b58.firebaseapp.com",
+  databaseURL: "https://ai-prompt-kitchen-b4b58-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ai-prompt-kitchen-b4b58",
+  storageBucket: "ai-prompt-kitchen-b4b58.firebasestorage.app",
+  messagingSenderId: "430835332340",
+  appId: "1:430835332340:web:73af884af9dd86a05ddaa1"
+};
+let db,auth,room='',id='',isHost=false,me={},roomData={},unsub=null,typingTimer;
+// Firebase 設定已內建；不再存取不存在的設定按鈕。
+async function init(){
+ if(db)return;
+ await loadFirebase();
+ const app=initializeApp(firebaseConfig);
+ auth=getAuth(app);db=getDatabase(app);
+ const credential=await signInAnonymously(auth);
+ id=credential.user.uid;
+}
+function makePrompt(c){return `請幫我${c[0]}，${c[1]}，並且${c[2]}。`}
+function pick(i){return sets[i][Math.floor(Math.random()*sets[i].length)]}
+async function enter(create){$('setupStatus').textContent='⏳ 正在載入 Firebase 並連線，請稍候…';$('createBtn').disabled=true;$('joinBtn').disabled=true;try{await init();let name=$('nickname').value.trim();if(!name)throw Error('請先輸入廚師暱稱');room=create?String(Math.floor(100000+Math.random()*900000)):$('roomInput').value.trim();if(!/^\d{6}$/.test(room))throw Error('請輸入六位數房間代碼');let r=ref(db,'rooms/'+room);let snap=await get(r);if(create&&snap.exists())throw Error('房間代碼重複，請再試一次');if(!create&&!snap.exists())throw Error('找不到這個房間');isHost=create;if(create){const t=await runTransaction(r,current=>current===null?{host:id,round:1,createdAt:Date.now()}:undefined,{applyLocally:false});if(!t.committed)throw Error('房間代碼重複，請再試一次');}if(!create&&snap.val().host===id)isHost=true;let pr=ref(db,`rooms/${room}/players/${id}`);me={name,round:create?1:(snap.val().round||1),cards:['','',''],prompt:'',result:'',joinedAt:Date.now()};await set(pr,me);await onDisconnect(pr).remove();$('setup').style.display='none';$('app').style.display='block';$('roomLabel').textContent=room;$('roleLabel').textContent=isHost?'老師／房主':'小廚師';$('hostActions').style.display=isHost?'flex':'none';unsub=onValue(r,s=>{if(!s.exists()){alert('房間已關閉');location.reload();return}roomData=s.val();$('roundLabel').textContent=roomData.round||1;render();$('status').textContent='🟢 已連線・大家的卡牌會即時更新';},e=>$('status').textContent='連線錯誤：'+e.message)}catch(e){console.error('Firebase 房間錯誤',e);$('setupStatus').textContent='無法連線：'+e.message+'。若顯示 permission_denied，請檢查資料庫規則；若顯示 Failed to fetch 或載入失敗，請檢查網路或瀏覽器。'}finally{$('createBtn').disabled=false;$('joinBtn').disabled=false}}
+$('createBtn').onclick=()=>enter(true);$('joinBtn').onclick=()=>enter(false);
+async function patch(x){Object.assign(me,x);try{await update(ref(db,`rooms/${room}/players/${id}`),x)}catch(e){$('status').textContent='儲存失敗：'+e.message}}
+function render(){const players=roomData.players||{};const n=Object.keys(players).length;$('countLabel').textContent=n;const mine=players[id];if(mine){if(mine.round!==me.round){me={...mine};$('promptEdit').value=me.prompt||'';$('resultEdit').value=me.result||''}else{me={...me,...mine}}}let c=me.cards||['','',''];$('myCards').innerHTML=['🍅 任務','🥬 細節','🥖 格式'].map((t,i)=>`<div class="card ${['task','detail','format'][i]}"><span class="tag">${t}</span><strong>${esc(c[i]||'還沒抽到食材')}</strong></div>`).join('');$('players').innerHTML=Object.entries(players).sort((a,b)=>(a[1].joinedAt||0)-(b[1].joinedAt||0)).map(([pid,p])=>`<article class="player ${pid===id?'me':''}"><h3>🧑‍🍳 ${esc(p.name)} ${pid===id?'<span class="pill">我</span>':''}</h3><div class="cards" style="grid-template-columns:1fr;gap:5px">${(p.cards||['','','']).map((v,i)=>`<div class="card ${['task','detail','format'][i]}" style="min-height:0;padding:8px"><span class="tag">${['任務','細節','格式'][i]}</span>　${esc(v||'尚未抽卡')}</div>`).join('')}</div><h4>📝 提示詞</h4><div class="prompt">${esc(p.prompt||'等待小廚師調配…')}</div><h4>🔬 E度測試發現</h4><div class="prompt">${esc(p.result||'尚未測試')}</div><button class="light" data-copy="${esc(pid)}" style="margin-top:9px">複製這位同學的提示詞</button></article>`).join('');document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copy(players[b.dataset.copy]?.prompt||''))}
+function draw(i){let c=[...(me.cards||['','',''])];if(i===-1)c=c.map((_,j)=>pick(j));else c[i]=pick(i);const prompt=makePrompt(c);$('promptEdit').value=prompt;patch({cards:c,prompt})}
+$('drawAll').onclick=()=>draw(-1);$('drawTask').onclick=()=>draw(0);$('drawDetail').onclick=()=>draw(1);$('drawFormat').onclick=()=>draw(2);
+function bindEdit(el,key){$(el).addEventListener('input',()=>{let value=$(el).value;clearTimeout(typingTimer);typingTimer=setTimeout(()=>patch({[key]:value}),350)})}bindEdit('promptEdit','prompt');bindEdit('resultEdit','result');
+async function copy(s){try{await navigator.clipboard.writeText(s);$('status').textContent='📋 已複製，可以貼到 E度！'}catch(e){$('status').textContent='無法自動複製，請手動選取文字'}}
+$('copyPrompt').onclick=()=>copy($('promptEdit').value);$('copyRoom').onclick=()=>copy(room);
+$('newRound').onclick=async()=>{if(!isHost||roomData.host!==id)return;if(!confirm('開始下一回合？所有人的卡牌和提示詞將清空。'))return;let round=(roomData.round||1)+1;let changes={round};Object.keys(roomData.players||{}).forEach(pid=>{changes[`players/${pid}/round`]=round;changes[`players/${pid}/cards`]=['','',''];changes[`players/${pid}/prompt`]='';changes[`players/${pid}/result`]=''});await update(ref(db,'rooms/'+room),changes)};
+$('leaveBtn').onclick=async()=>{if(confirm('確定離開房間？')){if(isHost&&confirm('是否同時關閉整間教室？'))await remove(ref(db,'rooms/'+room));else await remove(ref(db,`rooms/${room}/players/${id}`));location.reload()}};
+</script></body></html>
